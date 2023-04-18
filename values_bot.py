@@ -2,11 +2,10 @@ import telebot
 import requests
 import json
 
-from telebot import TeleBot
 
 TOKEN = "5948700376:AAGZZm1zl5a3cgn2M5fHOPiyYwf4Tlo4cus"
 
-bot: TeleBot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN)
 keys = dict(евро="EUR", доллар="USD", рубль="RUB")
 
 class ConvertionException(Exception):
