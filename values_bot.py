@@ -3,16 +3,41 @@ import telebot
 import requests
 import json
 
+from telebot import TeleBot
+
 TOKEN = "5948700376:AAGZZm1zl5a3cgn2M5fHOPiyYwf4Tlo4cus"
 
-bot = telebot.TeleBot(TOKEN)
-keys = {
-    "евро": "EUR",
-    "доллар": 'USD',
-    "рубль": 'RUB'
-}
+bot: TeleBot = telebot.TeleBot(TOKEN)
+keys = dict(евро="EUR", доллар="USD", рубль="RUB")
 
-class ConvertionException (Exception):
+class ConvertionException(Exception):
+    pass
+
+class Converter:
+    @staticmethod
+    def get_price(base: str, quote: str, amount: str):
+
+        if quote == base:
+            raise ConvertionException(f" Невозможно перевести одинаковые валюты (base).")
+
+        try:
+            quote_ticker = keys[quote]
+        except KeyError as e:
+            raise ConvertionException(f'Не удалось обработать валюту {quote}')
+
+        try:
+            base_ticker = keys[base]
+        except KeyError as e:
+            raise ConvertionException(f'He удалось обработать валюту {base}')
+
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            raise ConvertionException(f'Не удалось обработать количество {amount}')
+        r = requests.get(f"https://v6.exchangerate-api.com/v6/4951e59dc8f40f2a268ea857/pair/{base_ticker}/{quote_ticker}/{amount}")
+        total_base = json.loads(r.content)[quote_ticker]
+
+
 
 @bot.message_handler(commands=['start', 'help'])
 def help(message: telebot.types.Message):
@@ -32,11 +57,12 @@ def values(message: telebot.types.Message):
 
 @bot.message_handler(content_types=['text', ])
 def convert(message: telebot.types.Message):
-    base, quote, amount = message.text.split(" ")
-    r = requests.get(f'https://api.exchangeratesapi.io/latest?base={keys[base]}&symbols={keys[quote]}')
-    total_base = json.loads(r.content)[keys[quote]]
-    text = f'Цена {amount} {base} в {quote}- {total_base}'
+    values = message.text.split(' ')
+    if len(values) != 3:
+        raise ConvertionException('Слишком много параметров.')
+    base, quote, amount = values
+    total_base=Converter.get_price(base, quote, amount)
+    text = f'Цена {amount} {base} в {quote} - {total_base}'
     bot.send_message(message.chat.id, text)
 
-
-bot.polling()
+bot.polling(none_stop=True)
