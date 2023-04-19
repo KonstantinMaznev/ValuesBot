@@ -10,12 +10,7 @@ class Converter:
     def get_price(base: str, quote: str, amount: str):
 
         if quote == base:
-            raise ConvertionException(f" Невозможно перевести одинаковые валюты (base).")
-
-        try:
-            quote_ticker = keys[quote]
-        except KeyError:
-            raise ConvertionException(f'Не удалось обработать валюту {quote}')
+            raise ConvertionException(f" Невозможно перевести одинаковые валюты {quote}.")
 
         try:
             base_ticker = keys[base]
@@ -23,9 +18,14 @@ class Converter:
             raise ConvertionException(f'He удалось обработать валюту {base}')
 
         try:
+            quote_ticker = keys[quote]
+        except KeyError:
+            raise ConvertionException(f'Не удалось обработать валюту {quote}')
+
+        try:
             amount = float(amount)
         except ValueError:
             raise ConvertionException(f'Не удалось обработать количество {amount}')
         r = requests.get(f"https://v6.exchangerate-api.com/v6/4951e59dc8f40f2a268ea857/pair/{base_ticker}/{quote_ticker}/{amount}")
-        total_base = json.loads(r.content)[keys[quote]]
+        total_base = json.loads(r.content)
         return total_base
