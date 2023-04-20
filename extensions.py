@@ -27,5 +27,10 @@ class Converter:
         except ValueError:
             raise ConvertionException(f'Не удалось обработать количество {amount}')
         r = requests.get(f"https://v6.exchangerate-api.com/v6/4951e59dc8f40f2a268ea857/pair/{base_ticker}/{quote_ticker}/{amount}")
-        total_base = json.loads(r.content)
-        return total_base
+        resp = json.loads(r.content)
+        new_price = resp["conversion_rate"] * amount
+        new_price = round(new_price, 3)
+        message = f"Стоимость {amount} {base} в {quote} : {new_price}"
+        return message
+
+
